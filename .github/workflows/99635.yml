@@ -75,9 +75,4 @@ jobs:
           cache-from: type=registry,ref=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/myapp-build-cache:main
           cache-to: type=registry,ref=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/myapp-build-cache:main,mode=max
 
-      - name: Extract metadata (tags, labels)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-        images: |
-         ghcr.io/igorniemiec/myapp
+     
