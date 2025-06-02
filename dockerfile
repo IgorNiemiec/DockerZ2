@@ -51,7 +51,7 @@ RUN apt-get update && apt-get install -y build-essential
 
 RUN python -m venv /app/venv
 
-# Aktywacja środowiska wirtualnego i instalacja zależności
+# Aktywacja środowiska wirtualnego i instalacja zależnościd
 COPY requirements.txt .
 RUN /app/venv/bin/pip install --no-cache-dir -r requirements.txt
 
