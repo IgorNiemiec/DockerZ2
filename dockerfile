@@ -1,17 +1,66 @@
-#!/bin/bash
+# Etap 1: Budowanie aplikacji
+FROM node:20-alpine AS builder
 
-# Uruchomienie backendu w tle
-echo "Uruchamianie backendu..."
-cd weather-backend
-source .venv/bin/activate
-export $(grep -v '^#' .env | xargs)
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
+LABEL maintainer="Igor Niemiec"
 
-# Przejście do katalogu frontendowego
-echo "Uruchamianie frontendu..."
-cd ../weather-frontend
-npm start
 
-# Zatrzymanie backendu po zakończeniu frontendu
-echo "Zatrzymywanie backendu..."
-kill $(jobs -p)
+WORKDIR /app
+
+
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
+
+COPY package.json package-lock.json ./
+RUN npm install
+
+
+COPY ./ ./
+
+
+RUN npm run build
+
+
+FROM nginx:alpine
+
+
+RUN rm /etc/nginx/conf.d/default.conf
+
+
+COPY nginx.conf /etc/nginx/conf.d
+
+
+COPY --from=builder /app/build /usr/share/nginx/html
+
+
+EXPOSE 80
+
+
+CMD ["nginx", "-g", "daemon off;"]
+
+
+FROM python:3.11-slim AS builder
+
+
+LABEL maintainer="Igor Niemiec"
+
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y build-essential
+
+
+RUN python -m venv /app/venv
+
+# Aktywacja środowiska wirtualnego i instalacja zależności
+COPY requirements.txt .
+RUN /app/venv/bin/pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+ENV VISUAL_CROSSING_API_KEY=H93TEQFCKP7YYMVYGABJPAHLB
+
+
+EXPOSE 8000
+
+
+CMD ["/app/venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
