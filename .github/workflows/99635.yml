@@ -1,0 +1,73 @@
+name: IgorNiemiecs99635
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub (cache)
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image with cache
+        id: build-image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/myapp:latest
+            ghcr.io/${{ github.repository_owner }}/myapp:sha-${{ github.sha }}
+          cache-from: type=registry,ref=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/myapp-build-cache:main
+          cache-to: type=registry,ref=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/myapp-build-cache:main,mode=max
+
+      - name: Scan image for CVEs
+        uses: aquasecurity/trivy-action@v0.16.1
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/myapp:sha-${{ github.sha }}
+          format: table
+          exit-code: 1
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+      - name: Push image if scan passed
+        if: success()
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/myapp:latest
+            ghcr.io/${{ github.repository_owner }}/myapp:sha-${{ github.sha }}
+          cache-from: type=registry,ref=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/myapp-build-cache:main
+          cache-to: type=registry,ref=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/myapp-build-cache:main,mode=max
