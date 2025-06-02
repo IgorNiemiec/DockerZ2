@@ -4,7 +4,7 @@ FROM node:20-alpine AS builder
 LABEL maintainer="Igor Niemiec"
 
 
-WORKDIR /app
+WORKDIR /app/source/weather-backend
 
 
 ENV NODE_OPTIONS=--openssl-legacy-provider
