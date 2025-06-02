@@ -61,7 +61,6 @@ jobs:
              trivy image --exit-code 1 --severity CRITICAL,HIGH ${{ steps.meta.outputs.tags }}
 
 
-
       - name: Push image if scan passed
         if: success()
         uses: docker/build-push-action@v5
