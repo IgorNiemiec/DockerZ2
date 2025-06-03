@@ -46,8 +46,9 @@ jobs:
           push: false
           platforms: linux/amd64,linux/arm64
           tags: |
-             ghcr.io/igorniemiec/myapp:latest
-             ghcr.io/igorniemiec/myapp:sha-${{ github.sha }}
+            ghcr.io/igorniemiec/myapp:latest
+            ghcr.io/igorniemiec/myapp:sha-${{ github.sha }}
+            myapp:local
           cache-from: type=registry,ref=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/myapp-build-cache:main
           cache-to: type=registry,ref=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/myapp-build-cache:main,mode=max
 
@@ -64,7 +65,7 @@ jobs:
 
       - name: Scan image for CVEs
         run: |
-            trivy image --exit-code 1 --severity CRITICAL,HIGH ghcr.io/igorniemiec/myapp:latest
+          trivy image --exit-code 1 --severity CRITICAL,HIGH myapp:local
 
 
       - name: Push image if scan passed
