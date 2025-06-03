@@ -63,9 +63,17 @@ jobs:
             sudo apt-get install -y trivy
 
 
+      - name: Build local image for Trivy scan
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true  
+          tags: myapp:local
+
+
       - name: Scan image for CVEs
-        run: |
-          trivy image --exit-code 1 --severity CRITICAL,HIGH myapp:local
+        run: trivy image --exit-code 1 --severity CRITICAL,HIGH myapp:local
+
 
 
       - name: Push image if scan passed
