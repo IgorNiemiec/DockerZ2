@@ -64,7 +64,7 @@ jobs:
 
       - name: Scan image for CVEs
         run: |
-             trivy image --exit-code 1 --severity CRITICAL,HIGH ${{ steps.meta.outputs.tags }}
+            trivy image --exit-code 1 --severity CRITICAL,HIGH ghcr.io/igorniemiec/myapp:latest
 
 
       - name: Push image if scan passed
